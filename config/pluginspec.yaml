@@ -1,0 +1,61 @@
+pluginInfo:
+  # This is default sample specification
+  # Feel free to change it
+  # Call pdk showdoc pluginspec to see the list of available fields and their description
+  pluginName: 'EC-NexusIQServer'
+  version: '1.0.0'
+  description: 'Integrates witn SonaType Nexus IQ Server.'
+  author: 'Shaohua Wen swen@cloudbees.com'
+  supportUrl: 'none'
+  category: 'Security'
+  shell: 'ec-groovy'
+
+# Plugin configuration description
+configuration:
+  # This is a shell used for checking connection
+  shell: 'ec-groovy'
+  # A script for checking connection will be generated
+  checkConnection: 'true'
+  # A set of fields will be added to process debug level in the configuration
+  hasDebugLevel: true
+  parameters:
+  -
+    name: config
+    documentation: The name for the created configuration
+    required: true
+    type: entry
+    label: Configuration Name
+  -
+    name: desc
+    documentation: Description for the configuration
+    required: false
+    type: entry
+    label: Description
+  -
+    name: endpoint
+    documentation: Third-party endpoint to connect to.
+    required: false
+    type: entry
+    label: Endpoint
+  -
+    name: credential
+    documentation: A sample credential
+    required: true
+    type: credential
+    label: Credential
+
+procedures:
+-
+  name: 'Sample Procedure'
+  description: 'Sample procedure description'
+  # configuration field will be generated automatically
+  hasConfig: true
+  parameters:
+  -
+    name: applicationPath
+    documentation: Path to the application
+    required: true
+    type: entry
+    label: Application Path
+  outputParameters:
+    deployed: 'JSON representation of the deployed application'
