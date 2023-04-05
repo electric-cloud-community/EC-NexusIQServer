@@ -3,8 +3,8 @@ pluginInfo:
   # Feel free to change it
   # Call pdk showdoc pluginspec to see the list of available fields and their description
   pluginName: 'EC-NexusIQServer'
-  version: '1.0.0'
-  description: 'Integrates witn SonaType Nexus IQ Server.'
+  version: '2.0.0'
+  description: 'Integrates witn SonaType Nexus IQ Server reimplemented with PDK.'
   author: 'Shaohua Wen swen@cloudbees.com'
   supportUrl: 'none'
   category: 'Security'
@@ -32,30 +32,55 @@ configuration:
     type: entry
     label: Description
   -
-    name: endpoint
-    documentation: Third-party endpoint to connect to.
+    name: nexusServerURL
+    documentation: Specify the URL to the IQ Nexus server. For example http://nexus-iq-server:8070
+    required: true
+    type: entry
+    label: IQ Nexus Server URL
+  -
+    name: nexusJavaLocation
+    documentation: Full path to java binary or a command that should be used as java. If not set "java" will be used.
     required: false
     type: entry
-    label: Endpoint
+    label: Java Location
+  -
+    name: nexusCLILocation
+    documentation: Specify the absolute path to the IQ Nexus CLI. For example /opt/DevSecOps/nexus-iq-cli-1.47.0-01.jar
+    required: true
+    type: entry
+    label: Nexus CLI Location
   -
     name: credential
-    documentation: A sample credential
+    documentation: Specify the admin credentials for the IQ Nexus client to access the server.
     required: true
     type: credential
     label: Credential
 
 procedures:
 -
-  name: 'Sample Procedure'
-  description: 'Sample procedure description'
+  name: 'Create Build Report'
+  description: 'This procedure creates a build report using the Nexus CLI.'
   # configuration field will be generated automatically
   hasConfig: true
   parameters:
   -
-    name: applicationPath
-    documentation: Path to the application
+    name: nexusApplicationId
+    documentation: The name of the Application for which Build Report needs to be created. For example sandbox-application.
     required: true
     type: entry
-    label: Application Path
+    label: Application ID
+  -
+    name: nexusApplicationWarLocation
+    documentation: Specify the absolute path to the Application WAR file. For example /opt/DevSecOps/struts2-rest-showcase-*.war
+    required: true
+    type: entry
+    label: Application WAR Location
   outputParameters:
-    deployed: 'JSON representation of the deployed application'
+    Critical Violation Count: Critical Violation Count of the application
+    Build Report URL:
+    Violation Summary:
+    License Issue Count:
+    Security Issue Count:
+    Component Count:
+    Moderate Violation Count:
+    Severe Violation Count:
