@@ -12,31 +12,24 @@ pluginInfo:
 
 # Plugin configuration description
 configuration:
-  # This is a shell used for checking connection
-  shell: 'ec-groovy'
   # A script for checking connection will be generated
   checkConnection: 'true'
   # A set of fields will be added to process debug level in the configuration
   hasDebugLevel: true
+  restConfigInfo:
+    endpointLabel: 'Nexus IQ Server URL'
+    endpointDescription: Specify the URL to the IQ Nexus server. e.g. http://nexus-iq-server:8070
+    checkConnectionUri: '/api/v2/users'
+    defaultEndpointValue: http://nexus-iq-server:8070
+    headers:
+      Accept: 'application/json'
+    authSchemes:
+      basic:
+        userNameLabel: 'Username'
+        passwordLabel: 'Password'
+        description: 'Username and password to connect to ...'
+  hasProxySupport: false
   parameters:
-  -
-    name: config
-    documentation: The name for the created configuration
-    required: true
-    type: entry
-    label: Configuration Name
-  -
-    name: desc
-    documentation: Description for the configuration
-    required: false
-    type: entry
-    label: Description
-  -
-    name: nexusServerURL
-    documentation: Specify the URL to the IQ Nexus server. For example http://nexus-iq-server:8070
-    required: true
-    type: entry
-    label: IQ Nexus Server URL
   -
     name: nexusJavaLocation
     documentation: Full path to java binary or a command that should be used as java. If not set "java" will be used.
@@ -49,12 +42,19 @@ configuration:
     required: true
     type: entry
     label: Nexus CLI Location
-  -
-    name: credential
-    documentation: Specify the admin credentials for the IQ Nexus client to access the server.
-    required: true
-    type: credential
-    label: Credential
+
+restClient:
+  userAgent: My Nexus IQ Client
+  language: groovy
+  endpoints:
+    - methodName: getReportDetails
+      httpMethod: GET
+      parameters:
+        - name: applicationId
+          in: path
+        - name: reportId
+          in: path
+      url: /api/v2/applications/{{applicationID}}/reports/{{reportId}}
 
 procedures:
 -
