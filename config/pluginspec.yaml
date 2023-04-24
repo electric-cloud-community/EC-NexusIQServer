@@ -54,7 +54,7 @@ restClient:
           in: path
         - name: reportId
           in: path
-      url: /api/v2/applications/{{applicationID}}/reports/{{reportId}}
+      url: /api/v2/applications/{{applicationId}}/reports/{{reportId}}
 
 procedures:
 -
