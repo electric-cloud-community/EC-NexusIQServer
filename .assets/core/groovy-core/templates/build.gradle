@@ -12,6 +12,7 @@ dependencies {
 
     // Change the version if you have upgraded the groovy library
     implementation 'com.electriccloud.plugins:flowpdf-groovy-lib:{{groovyVersion}}.0'
+    {{httpLibrary}}
 }
 
 

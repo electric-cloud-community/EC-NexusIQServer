@@ -19,6 +19,7 @@ class CreateBuildReportParameters {
 
         def nexusApplicationId = sp.getRequiredParameter('nexusApplicationId').value
         parameters.nexusApplicationId = nexusApplicationId
+
         def nexusApplicationWarLocation = sp.getRequiredParameter('nexusApplicationWarLocation').value
         parameters.nexusApplicationWarLocation = nexusApplicationWarLocation
 

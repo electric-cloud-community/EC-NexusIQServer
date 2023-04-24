@@ -53,6 +53,7 @@ def getCreateActualParameters(Map pluginParameters) {
             {% for parameter in parameters %}
             {{parameter.name}} : pluginParameters.{{parameter.name}},
             {% endfor %}
+            {% if currentPayloadType %}reportObjectType : '{{currentPayloadType}}',{% endif %}
             previewMode: '0',
             debug: '0',
     ]

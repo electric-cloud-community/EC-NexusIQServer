@@ -1,4 +1,6 @@
 import com.cloudbees.flowpdf.*
+import com.cloudbees.flowpdf.components.ComponentManager
+import com.cloudbees.flowpdf.components.cli.*
 
 /**
 * NexusIQServer
@@ -17,31 +19,73 @@ class NexusIQServer extends FlowPlugin {
     }
 // === check connection ends ===
 /**
-    * createBuildReport - Create Build Report/Create Build Report
-    * Add your code into this method and it will be called when the step runs
-    * @param config (required: true)
-    * @param nexusApplicationId (required: true)
-    * @param nexusApplicationWarLocation (required: true)
-    
-    */
+     * Auto-generated method for the procedure Create Build Report/Create Build Report
+     * Add your code into this method and it will be called when step runs* Parameter: config* Parameter: nexusApplicationId* Parameter: nexusApplicationWarLocation
+     */
     def createBuildReport(StepParameters p, StepResult sr) {
-        // Use this parameters wrapper for convenient access to your parameters
         CreateBuildReportParameters sp = CreateBuildReportParameters.initParameters(p)
+        ECNexusIQServerRESTClient rest = genECNexusIQServerRESTClient()
+        Map restParams = [:]
+        Map requestParams = p.asMap
+        log.info "requestParams: $requestParams"
+        restParams.put("JavaLocation", requestParams.get("nexusJavaLocation")?:"java")
+        restParams.put("CLILocation", requestParams.get("nexusCLILocation"))
+        restParams.put("credential", requestParams.get("basic_credential"))
+        restParams.put("IQServerURL", requestParams.get("endpoint"))
+        restParams.put("ApplicationId", sp.getNexusApplicationId())
+        restParams.put("ApplicationWarLocation", sp.getNexusApplicationWarLocation())
+        //log.info getContext().getConfigValues()
+        def commandOptions = genCommandOptions(restParams.get("CLILocation"), restParams.get("ApplicationId"), restParams.get("IQServerURL"), restParams.get("credential"), restParams.get("ApplicationWarLocation"))
 
-        // Calling logger:
-        log.info p.asMap.get('config')
-        log.info p.asMap.get('nexusApplicationId')
-        log.info p.asMap.get('nexusApplicationWarLocation')
-        
+        def workspaceDir = System.getProperty('user.dir')
+        /** Instantiate CLI component with a ComponentManager */
+        CLI cli = (CLI) ComponentManager.loadComponent(CLI.class, [workingDirectory: workspaceDir], this)
 
-        // Setting job step summary to the config name
-        sr.setJobStepSummary(p.getParameter('config')?.getValue() ?: 'null')
-
-        sr.setReportUrl("Sample Report", 'https://cloudbees.com')
+        /** Create a Command Instance */
+        Command cmd = cli.newCommand(restParams.get("JavaLocation"), commandOptions)
+        try {
+            ExecutionResult result =cli.runCommand(cmd)
+            String stdOut = result.getStdOut()
+            log.info "command output:\n $stdOut"
+            if (!result.isSuccess()){
+                sr.setJobStepOutcome('error')
+            }
+        } catch (Exception ex){
+            ex.printStackTrace()
+            sr.setJobStepOutcome('error')
+            sr.setJobStepSummary(ex.getMessage())
+        }
+        Object response = rest.getReportDetails(restParams)
+        log.info "Got response from server: $response"
+        //TODO step result output parameters 
         sr.apply()
-        log.info("step Create Build Report has been finished")
     }
 
+    /**
+        # 1 - java path
+        # 2 - client.jar
+        # 3 - id
+        # 4 - server url
+        # 5 - credenrials username:password
+        # 6 - app path
+    **/
+    def genCommandOptions(clientJar, applicationId, serverURL, credential, applicationWarLocation) {
+        def userName = credential.userName
+        def password = credential.secretValue
+
+        def cmdOptions = [ "-jar" , clientJar , "-i", applicationId, "-s", serverURL , "-a" , userName + ":" + password ,  applicationWarLocation , "2>&1"]
+
+        return cmdOptions
+    }
+
+/**
+     * This method returns REST Client object
+     */
+    ECNexusIQServerRESTClient genECNexusIQServerRESTClient() {
+        Context context = getContext()
+        ECNexusIQServerRESTClient rest = ECNexusIQServerRESTClient.fromConfig(context.getConfigValues(), this)
+        return rest
+    }
 // === step ends ===
 
 }

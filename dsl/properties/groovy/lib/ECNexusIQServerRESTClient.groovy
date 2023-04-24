@@ -1,20 +1,15 @@
 // DO NOT EDIT THIS BLOCK BELOW=== rest client imports starts ===
 import com.cloudbees.flowpdf.*
-import com.cloudbees.flowpdf.client.HTTPRequest
+import com.cloudbees.flowpdf.client.Constants
+import com.cloudbees.flowpdf.client.RESTRequest
 import com.cloudbees.flowpdf.client.REST
 import com.cloudbees.flowpdf.client.RESTConfig
+import com.cloudbees.flowpdf.client.RESTResponse
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import groovy.transform.InheritConstructors
-import groovyx.net.http.ContentType
-import groovyx.net.http.HTTPBuilder
-import groovyx.net.http.Method
-import org.apache.http.HttpException
-import org.apache.http.HttpResponse
 import sun.reflect.generics.reflectiveObjects.NotImplementedException
-import org.apache.http.auth.AuthScope
-import org.apache.http.auth.UsernamePasswordCredentials
-// DO NOT EDIT THIS BLOCK ABOVE ^^^=== rest client imports ends, checksum: bd43b259ee4d532c8bd07cf2f708baba ===
+// DO NOT EDIT THIS BLOCK ABOVE ^^^=== rest client imports ends, checksum: 13f768133315b40c755fd1b028e2f22b ===
 // Place for the custom user imports, e.g. import groovy.xml.*
 // DO NOT EDIT THIS BLOCK BELOW=== rest client starts ===
 @InheritConstructors
@@ -36,17 +31,17 @@ class ECNexusIQServerRESTClient {
     private static OAUTH1_SIGNATURE_METHOD = 'RSA-SHA1'
 
     String endpoint
-    String method
-    Map<String, String> methodParameters
+    String procedureName
+    Map<String, String> procedureParameters
 
     private Log log
-    private REST rest
+    private REST client
     private ProxyConfig proxyConfig
 
     ECNexusIQServerRESTClient(String endpoint, RESTConfig restConfig, FlowPlugin plugin) {
         this.endpoint = endpoint
         this.log = plugin.log
-        this.rest = new REST(restConfig)
+        this.client = new REST(restConfig)
     }
 
     /**
@@ -59,31 +54,25 @@ class ECNexusIQServerRESTClient {
         Log log = plugin.log
         Credential credential
         RESTConfig restConfig = new RESTConfig()
-        restConfig.endpoint = endpoint
+            .withEndpoint(endpoint)
         if ((credential = config.getCredential('bearer_credential')) && credential.secretValue) {
-            restConfig.authScheme = 'bearer'
-            restConfig.bearerToken = credential.secretValue
-            restConfig.bearerPrefix = BEARER_PREFIX
+            if (!credential.userName)
+                credential.userName = BEARER_PREFIX
+            restConfig.withCredentialForScheme('bearer', credential)
             log.debug "Using bearer credential in REST Client"
-        }
-        else if ((credential = config.getCredential('basic_credential'))) {
-            restConfig.authScheme = 'basic'
-            restConfig.basicCredentialUsername = credential.userName
-            restConfig.basicCredentialPassword = credential.secretValue
-        }
-        else if (config.isParameterHasValue('authScheme') && config.getParameter('authScheme').value == 'anonymous') {
+        } else if ((credential = config.getCredential('basic_credential'))) {
+            restConfig.withCredentialForScheme('basic', credential)
+        } else if (config.isParameterHasValue('authScheme') && config.getParameter('authScheme').value == 'anonymous') {
             log.debug "Using anonymous auth scheme"
+            restConfig.withAuthScheme('anonymous')
+        } else {
+            restConfig.withAuthScheme('anonymous')
         }
+
         if (config.isParameterHasValue('httpProxyUrl')) {
-            String proxyUrl = config.getParameter('httpProxyUrl').value
-            restConfig.httpProxyUrl = proxyUrl
-            log.debug "Using proxy $proxyUrl"
-            if ((credential = config.getCredential('proxy_credential'))) {
-                restConfig.proxyCredentialUsername = credential.userName
-                restConfig.proxyCredentialPassword = credential.secretValue
-                log.debug "Using proxy authorization"
-            }
+            restConfig.withProxyParameters(config.getParameter('httpProxyUrl').value, config.getCredential('proxy_credential'))
         }
+
         return new ECNexusIQServerRESTClient(endpoint, restConfig, plugin)
     }
 
@@ -104,90 +93,43 @@ class ECNexusIQServerRESTClient {
 
     /**
      * This is the main request method
-     * methodString - GET|POST|PUT - request method
-     * url - uri path (without the endpoint)
-     * query - uri.query
+     * requestMethod - GET|POST|PUT - request method
+     * pathUrl - uri path (without the endpoint)
+     * queries - uri.query
      * payload - payload for POST/PUT requests
-     * h - headers for the request
+     * headers - headers for the request
      */
-    Object makeRequest(String methodString, String url, Map query, def payload, Map h) {
-        Method method = Method.valueOf(methodString)
+    Object makeRequest(String requestMethod, String pathUrl, Map queries, def payload, Map headers) {
 
-        HTTPRequest request = new HTTPRequest(
-            method: method,
-            path: url,
-            query: query,
-            headers: h
-        )
+        RESTRequest restRequest = new RESTRequest()
+            .withRequestMethod(requestMethod)
+            .withPathUrl(pathUrl)
+            .withQueries(queries)
+            .withHeaders(headers) as RESTRequest
 
         if (payload) {
             if (payload instanceof byte[]) {
-                request.setContentBytes(payload)
+                restRequest.withContentBytes(payload)
+            } else {
+                restRequest.withContentString(encodePayload(payload))
             }
-            else {
-                request.setContentString(encodePayload(payload))
+        }
+
+        if ((restRequest.requestMethod == "POST") || (restRequest.requestMethod == "PUT") || (restRequest.requestMethod == "PATCH")) {
+            if (!restRequest.requestContentType) {
+                restRequest.requestContentType = Constants.CT_JSON
             }
         }
 
-        if (method == Method.POST || method == Method.PUT || method == Method.PATCH) {
-            if (!request.requestContentType) {
-                request.requestContentType = ContentType.JSON
-            }
-        }
-        request = rest.prepareRequest(request)
-        request = augmentRequest(request)
+        RESTResponse restResponse = client.doRequest(augmentRequest(client.prepareRequest(restRequest)), true)
 
-        HTTPBuilder builder = rest.httpBuilder
-        boolean success = true
-        Tuple2 responseTuple = builder.request(method) {
-            if (request.path) {
-                def path = uri.path ?: ""
-                path += '/' + request.path
-                path = path.replaceAll(/\/+/, '/')
-                uri.path = path
-                log.trace("Set request path: $uri.path")
-            }
-            if (request.query) {
-                uri.query = request.query
-            }
-            request.headers.each { headerName, headerValue ->
-                headers.put(headerName, headerValue)
-                log.trace "Added request header $headerName -> $headerValue"
-            }
-            if (request.contentString) {
-                send request.requestContentType, request.contentString
-                log.trace "Request body is $body"
-            }
+        Object body = restResponse.content
 
-            if (request.contentBytes) {
-                send request.requestContentType, request.contentBytes
-            }
-
-            response.success = { HttpResponse resp, decoded ->
-                log.trace "Got response: $resp"
-                log.trace "Got content: $decoded"
-
-                return new Tuple2(resp, decoded)
-            }
-            response.failure = { HttpResponse resp, body ->
-                log.trace "Request failed: $resp"
-                log.trace "$body"
-                success = false
-
-                return new Tuple2(resp, body)
-            }
-        }
-        HttpResponse response = responseTuple.first
-        Object body = responseTuple.second
-
-        Object processedResponse = processResponse(response, body)
+        Object processedResponse = processResponse(restResponse, body)
         if (processedResponse) {
             return processedResponse
         }
-        if (!success) {
-            throw new HttpException("Request for uri $url failed: ${response.statusLine.statusCode}, ${body}")
-        }
-        Object parsed = parseResponse(response, body)
+        Object parsed = parseResponse(restResponse, body)
         return parsed
     }
 
@@ -201,33 +143,28 @@ class ECNexusIQServerRESTClient {
         def retval
         if (o instanceof Map) {
             retval = [:]
-            for(String key in o.keySet()) {
+            for (String key in o.keySet()) {
                 key = renderOneLineTemplate(key, params)
                 def value = o.get(key)
                 if (value instanceof String) {
                     value = renderOneLineTemplate(value, params)
-                }
-                else {
+                } else {
                     value = fillFields(value, params)
                 }
                 retval.put(key, value)
             }
-        }
-        else if (o instanceof List) {
+        } else if (o instanceof List) {
             retval = []
             for (def i in o) {
                 i = fillFields(i, params)
                 retval.add(i)
             }
-        }
-        else if (o instanceof String) {
+        } else if (o instanceof String) {
             o = renderOneLineTemplate(o, params)
             retval = o
-        }
-        else if (o instanceof Integer || o instanceof Boolean) {
+        } else if (o instanceof Integer || o instanceof Boolean) {
             retval = o
-        }
-        else {
+        } else {
             throw new NotImplementedException()
         }
         return retval
@@ -239,8 +176,8 @@ class ECNexusIQServerRESTClient {
     * reportId: in path
     */
     def getReportDetails(Map<String, Object> params) {
-        this.method = 'getReportDetails'
-        this.methodParameters = params
+        this.procedureName = 'getReportDetails'
+        this.procedureParameters = params
 
         String uri = '/api/v2/applications/{{applicationID}}/reports/{{reportId}}'
         log.debug("URI template $uri")
@@ -261,25 +198,25 @@ class ECNexusIQServerRESTClient {
         Map headers = [:]
         return makeRequest('GET', uri, query, payload, headers)
     }
-// DO NOT EDIT THIS BLOCK ABOVE ^^^=== rest client ends, checksum: c8c215e1dbdd423dc0c961a6cfb0e5ff ===
+// DO NOT EDIT THIS BLOCK ABOVE ^^^=== rest client ends, checksum: 04630c2ffa5fda065e91ee4a0f46cb83 ===
     /**
      * Use this method for any request pre-processing: adding custom headers, binary files, etc.
      */
-    HTTPRequest augmentRequest(HTTPRequest request) {
+    RESTRequest augmentRequest(RESTRequest request) {
         return request
     }
 
     /**
      * Use this method to provide a custom encoding for you payload (XML, yaml etc)
      */
-    Object encodePayload(def payload) {
+    String encodePayload(def payload) {
         return JsonOutput.toJson(payload)
     }
 
     /**
      * Use this method to parse/alter response from the server
      */
-    def parseResponse(HttpResponse response, Object body) {
+    def parseResponse(RESTResponse restResponse, Object body) {
         //Relying on http builder content type processing
         return body
     }
@@ -289,7 +226,7 @@ class ECNexusIQServerRESTClient {
      * The response from this method will be returned as is, if any.
      * To disable response, just return null.
      */
-    def processResponse(HttpResponse response, Object body) {
+    def processResponse(RESTResponse restResponse, Object body) {
         return null
     }
 

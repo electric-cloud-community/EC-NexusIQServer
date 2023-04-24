@@ -53,7 +53,13 @@ try {
 }
 println "Auth Scheme: $authType"
 
-def http = new HTTPBuilder(endpoint)
+def http
+try {
+    http = new HTTPBuilder(endpoint)
+} catch (URISyntaxException e) {
+    println(e.getMessage())
+    handleError(ef, e.getMessage())
+}
 
 def proxyUrlFormalParameter = formalParameters.find { it.formalParameterName == 'httpProxyUrl'}
 if (proxyUrlFormalParameter) {
@@ -85,118 +91,136 @@ if (proxyUrlFormalParameter) {
   }
 }
 
-// Should be ignored after the proxy is set
-http.ignoreSSLIssues()
+try {
+  def ignoreSSL = ef.getProperty(propertyName: "ignoreSSLIssues")?.property?.value
 
-http.request(GET, TEXT) { req ->
-  headers.'User-Agent' = 'FlowPDF Check Connection'
-  headers.accept = '*'
-
-  if (checkConnectionMeta.headers) {
-    def h = checkConnectionMeta.headers
-    h.each {k, v ->
-      headers.put(k.toLowerCase(), v)
-    }
-    println "Added headers: $checkConnectionMeta.headers"
+  if (ignoreSSL == "true"){
+    println "Set Ignore SSL to true"
+    http.ignoreSSLIssues()
   }
-  uri.query = [:]
+} catch(Throwable e) {
+}
 
-  boolean uriChanged = false
-  if (authType == "basic") {
-    def meta = checkConnectionMeta?.authSchemes?.basic
-    def credentialName = meta?.credentialName ?: "basic_credential"
-    def basicAuth = ef.getFullCredential(credentialName: credentialName)?.credential
-    def username = basicAuth.userName
-    def password = basicAuth.password
-    if (!username) {
-      handleError(ef, "Username is not provided for the Basic Authorization")
+try {
+  http.request(GET, TEXT) { req ->
+    headers.'User-Agent' = 'FlowPDF Check Connection'
+    headers.accept = '*'
+
+    if (checkConnectionMeta.headers) {
+      def h = checkConnectionMeta.headers
+      h.each { k, v ->
+        headers.put(k.toLowerCase(), v)
+      }
+      println "Added headers: $checkConnectionMeta.headers"
     }
-    headers.Authorization = "Basic " + (basicAuth.userName + ':' + basicAuth.password).bytes.encodeBase64()
-    println "Setting Basic Auth: username $basicAuth.userName"
-    if (meta.checkConnectionUri != null) {
+    uri.query = [:]
+
+    boolean uriChanged = false
+    if (authType == "basic") {
+      def meta = checkConnectionMeta?.authSchemes?.basic
+      def credentialName = meta?.credentialName ?: "basic_credential"
+      def basicAuth = ef.getFullCredential(credentialName: credentialName)?.credential
+      def username = basicAuth.userName
+      def password = basicAuth.password
+      if (!username) {
+        handleError(ef, "Username is not provided for the Basic Authorization")
+      }
+      headers.Authorization = "Basic " + (basicAuth.userName + ':' + basicAuth.password).bytes.encodeBase64()
+      println "Setting Basic Auth: username $basicAuth.userName"
+      if (meta.checkConnectionUri != null) {
         uri.path = augmentUri(uri.path, meta.checkConnectionUri)
         uri.query = fetchQuery(meta.checkConnectionUri)
         println "Check Connection URI: $uri"
         uriChanged = true
+      }
     }
-  }
 
-  if (authType == "bearerToken") {
-    def meta = checkConnectionMeta?.authSchemes?.bearerToken
-    def credentialName = meta?.credentialName ?: 'bearer_credential'
-    def bearer = ef.getFullCredential(credentialName: credentialName)?.credential
-    def prefix = meta.prefix ?: "Bearer"
-    headers.Authorization = prefix + " " + bearer.password
-    println "Setting Bearer Auth with prefix $prefix"
-    if (meta.checkConnectionUri != null) {
+    if (authType == "bearerToken") {
+      def meta = checkConnectionMeta?.authSchemes?.bearerToken
+      def credentialName = meta?.credentialName ?: 'bearer_credential'
+      def bearer = ef.getFullCredential(credentialName: credentialName)?.credential
+      def prefix = meta.prefix ?: "Bearer"
+      headers.Authorization = prefix + " " + bearer.password
+      println "Setting Bearer Auth with prefix $prefix"
+      if (meta.checkConnectionUri != null) {
         uri.path = augmentUri(uri.path, meta.checkConnectionUri)
         uri.query = fetchQuery(meta.checkConnectionUri)
         println "Check Connection URI: $uri"
         uriChanged = true
-    }
-  }
-
-  if (authType == "anonymous") {
-    println "Anonymous access"
-    def meta = checkConnectionMeta?.authSchemes?.anonymous
-    if (meta.checkConnectionUri != null) {
-      uri.path = augmentUri(uri.path, meta.checkConnectionUri)
-      uri.query = fetchQuery(meta.checkConnectionUri)
-      println "Check Connection URI: $uri"
-      uriChanged = true
-    }
-  }
-  {% if oauth1 %}
-  if (authType == 'oauth1') {
-    println "OAuth1"
-    def meta = checkConnectionMeta?.authSchemes?.oauth1
-    if (meta.checkConnectionUri != null) {
-      uri.path = augmentUri(uri.path, meta.checkConnectionUri)
-      uriChanged = true
-      println "Check Connection URI: $uri"
+      }
     }
 
-    // Needs to be here because it participates in the signature
+    if (authType == "anonymous") {
+      println "Anonymous access"
+      def meta = checkConnectionMeta?.authSchemes?.anonymous
+      if (meta.checkConnectionUri != null) {
+        uri.path = augmentUri(uri.path, meta.checkConnectionUri)
+        uri.query = fetchQuery(meta.checkConnectionUri)
+        println "Check Connection URI: $uri"
+        uriChanged = true
+      }
+    }
+    {% if oauth1 %}
+    if (authType == 'oauth1') {
+      println "OAuth1"
+      def meta = checkConnectionMeta?.authSchemes?.oauth1
+      if (meta.checkConnectionUri != null) {
+        uri.path = augmentUri(uri.path, meta.checkConnectionUri)
+        uriChanged = true
+        println "Check Connection URI: $uri"
+      }
+
+      // Needs to be here because it participates in the signature
+      if (checkConnectionMeta.checkConnectionUri != null && !uriChanged) {
+        uri.path = augmentUri(uri.path, checkConnectionMeta.checkConnectionUri)
+        println "Check Connection URI: $uri"
+        uriChanged = true
+      }
+
+      String credentialName = meta?.credentialName ?: 'oauth1_credential'
+      def cred = ef.getFullCredential(credentialName: credentialName)?.credential
+      def token = cred.userName
+      def privateKey = cred.password
+      def consumerKey = ef.getProperty(propertyName: 'oauth1ConsumerKey')?.property?.value
+      String signatureMethod = meta.signatureMethod
+      OAuthParameters params = oauthParams(endpoint, uri.path, privateKey, consumerKey, token, signatureMethod)
+      uri.query = params.baseParameters
+      println "query: $uri.query"
+    }
+    {% endif %}
+
     if (checkConnectionMeta.checkConnectionUri != null && !uriChanged) {
       uri.path = augmentUri(uri.path, checkConnectionMeta.checkConnectionUri)
-      println "Check Connection URI: $uri"
-      uriChanged = true
+      uri.query = fetchQuery(checkConnectionMeta.checkConnectionUri)
+      println "URI: $uri"
     }
 
-    String credentialName = meta?.credentialName ?: 'oauth1_credential'
-    def cred = ef.getFullCredential(credentialName: credentialName)?.credential
-    def token = cred.userName
-    def privateKey = cred.password
-    def consumerKey = ef.getProperty(propertyName: 'oauth1ConsumerKey')?.property?.value
-    String signatureMethod = meta.signatureMethod
-    OAuthParameters params = oauthParams(endpoint, uri.path, privateKey, consumerKey, token, signatureMethod)
-    uri.query = params.baseParameters
-    println "query: $uri.query"
-  }
-  {% endif %}
+    response.success = { resp, reader ->
+      assert resp.status == 200
+      println "Status Line: ${resp.statusLine}"
+      println "Response length: ${resp.headers.'Content-Length'}"
+      System.out << reader // print response reader
+    }
 
-  if (checkConnectionMeta.checkConnectionUri != null && !uriChanged) {
-    uri.path = augmentUri(uri.path, checkConnectionMeta.checkConnectionUri)
-    uri.query = fetchQuery(checkConnectionMeta.checkConnectionUri)
-    println "URI: $uri"
+    response.failure = { resp, reader ->
+      println "Check connection failed"
+      String status = resp.statusLine.toString()
+      println "$status"
+      String body = reader.text
+      println body
+      String message = "Check Connection Failed: ${status}, $body"
+      handleError(ef, message)
+    }
   }
-
-  response.success = { resp, reader ->
-    assert resp.status == 200
-    println "Status Line: ${resp.statusLine}"
-    println "Response length: ${resp.headers.'Content-Length'}"
-    System.out << reader // print response reader
+} catch (Throwable e) {
+  String message = e.getMessage()
+  // Some exceptions does not have message
+  message = message ?: e.getCause()
+  if (!message) {
+    throw e
   }
-
-  response.failure = { resp, reader ->
-    println "Check connection failed"
-    String status = resp.statusLine.toString()
-    println "$status"
-    String body =  reader.text
-    println body
-    String message = "Check Connection Failed: ${status}, $body"
-    handleError(ef, message)
-  }
+  println(message)
+  handleError(ef, message)
 }
 
 def handleError(def ef, def message) {

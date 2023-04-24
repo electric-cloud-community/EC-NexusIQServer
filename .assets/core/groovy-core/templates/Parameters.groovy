@@ -15,8 +15,11 @@ class {{parametersClassName}} {
         {{parametersClassName}} parameters = new {{parametersClassName}}()
 
         {% for p in parameters -%}
-        {% if p.type == 'checkbox' %}def {{p.varName}} = sp.getParameter('{{p.name}}').value == "true"{% else %}def {{p.varName}} = sp.{{p.methodName}}('{{p.name}}').value{% endif %}
-        parameters.{{p.varName}} = {{p.varName}}
+        {% if p.type == 'checkbox' %}def {{p.varName}} = sp.getParameter('{{p.name}}').value == "true"
+        parameters.{{p.varName}} = {{p.varName}}{% else %}
+        def {{p.varName}} = sp.{{p.methodName}}('{{p.name}}').value
+        parameters.{{p.varName}} = {{p.varName}} {% if p.value %} ?: '{{p.value}}' {% endif %}
+        {% endif %}
         {% endfor %}
         return parameters
     }
