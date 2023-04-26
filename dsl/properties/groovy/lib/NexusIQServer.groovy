@@ -1,6 +1,8 @@
 import com.cloudbees.flowpdf.*
 import com.cloudbees.flowpdf.components.ComponentManager
 import com.cloudbees.flowpdf.components.cli.*
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
 * NexusIQServer
@@ -43,7 +45,7 @@ class NexusIQServer extends FlowPlugin {
 
         /** Create a Command Instance */
         Command cmd = cli.newCommand(restParams.get("javaLocation"), commandOptions)
-        def reportId
+        def violations, reportUrl, reportId
         try {
             ExecutionResult result =cli.runCommand(cmd)
             String stdOut = result.getStdOut()
@@ -52,21 +54,56 @@ class NexusIQServer extends FlowPlugin {
             log.info "command error:\n $stdError"
             if (!result.isSuccess()){
                 sr.setJobStepOutcome('error')
+            } else {
+                violations = extractViolations(stdOut)
+                reportUrl = extractReportUrl(stdOut)
+                reportId = getReportIdFromReportUrl(reportUrl)
+                sr.setJobStepOutcome('success')
+                sr.setOutputParameter("Violation Summary", violations)
+                sr.setOutputParameter("Build Report URL", reportUrl)
+                violations.split(',').each {
+                    def severity = it.trim().split(' ')[1].capitalize()
+                    def count = it.trim().split(' ')[0]
+                   sr.setOutputParameter("$severity Violation Count", count)
+                }
             }
         } catch (Exception ex){
             ex.printStackTrace()
             sr.setJobStepOutcome('error')
             sr.setJobStepSummary(ex.getMessage())
         }
-        reportId = "dummyId"
+
         if(reportId){
             restParams.put("reportId", reportId)
             Object response = rest.getReportDetails(restParams)
             log.info "Got response from server: $response"
         }
-        
+
         //TODO step result output parameters 
         sr.apply()
+    }
+
+    def extractViolations(String stdOut) {
+        //example: 94 critical, 42 severe, 2 moderate
+        return findSingleMatch("((Summary\\sof\\spolicy\\sviolations:\\s*)|(Number\\sof\\sopen\\spolicy\\sviolations:\\s*))(.*)$", 4, stdOut)
+    }
+
+    def extractReportUrl(String stdOut) {
+        return findSingleMatch("The\\sdetailed\\sreport\\scan\\sbe\\sviewed\\sonline\\sat\\s*(https?:\\/\\/.*?)$", 1, stdOut)
+    }
+
+    def getReportIdFromReportUrl(String reportUrl) {
+        return findSingleMatch(".*\\/report\\/([a-zA-Z0-9\\-]+)\\/?\\s*$", 1, reportUrl)
+    }
+
+    def findSingleMatch(String pattern, int group, String stdOut) {
+        def result
+        def pattern = Pattern.compile(pattern, Pattern.MULTILINE)
+        def matcher = pattern.matcher(stdOut)
+        while (matcher.find()) {
+            result = matcher.group(group)
+        }
+        return result
     }
 
     /**

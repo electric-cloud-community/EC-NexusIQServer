@@ -76,11 +76,43 @@ procedures:
     type: entry
     label: Application WAR Location
   outputParameters:
-    Critical Violation Count: Critical Violation Count of the application
-    Build Report URL:
-    Violation Summary:
-    License Issue Count:
-    Security Issue Count:
-    Component Count:
-    Moderate Violation Count:
-    Severe Violation Count:
+  -
+    # Output parameter name
+    name: Violation Summary
+    # Output parameter description
+    description: 'Something like this "Summary of policy violations: 7 critical, 3 severe, 0 moderate"'
+  -
+    # Output parameter name
+    name: Build Report URL
+    # Output parameter description
+    description: 'Path to Build Report URL. Something like this http://nexus/ui/links/application/sandbox-application/report/806fbab9e4ed426e85e1a7ee721b0e6f'
+  -
+    # Output parameter name
+    name: Critical Violation Count
+    # Output parameter description
+    description: Number of Critical Violations, for example 7
+  -
+    # Output parameter name
+    name: Severe Violation Count
+    # Output parameter description
+    description: Number of Severe Violations, for example 3
+  -
+    # Output parameter name
+    name: Moderate Violation Count
+    # Output parameter description
+    description: Number of Moderate Violations, for example 0
+  -
+    # Output parameter name
+    name: Component Count
+    # Output parameter description
+    description: Number of Components Identified, for example 28
+  -
+    # Output parameter name
+    name: Security Issue Count
+    # Output parameter description
+    description: Number of Security Issues Identified, for example 27
+  -
+    # Output parameter name
+    name: License Issue Count
+    # Output parameter description
+    description: Number of License Issues Identified, for example 6

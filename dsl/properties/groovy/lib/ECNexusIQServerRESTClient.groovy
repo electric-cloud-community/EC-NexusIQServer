@@ -218,7 +218,8 @@ class ECNexusIQServerRESTClient {
      */
     def parseResponse(RESTResponse restResponse, Object body) {
         //Relying on http builder content type processing
-        return body
+        def jsonSlurper = new JsonSlurper()
+        return jsonSlurper.parseText(body)
     }
 
     /**
