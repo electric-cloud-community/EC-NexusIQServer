@@ -57,7 +57,7 @@ class NexusIQServer extends FlowPlugin {
             if (result.isSuccess()){
                 sr.setJobStepOutcome('error')
             } else {
-                stdOut = """
+                stdOut = """\
                 14:40:13 [INFO] 14:40:13 [INFO] 14:40:13 [INFO] ********************************************************************************************* 
                 14:40:13 [INFO] Policy Action: Failure 
                 14:40:13 [INFO] Stage: release 
@@ -66,8 +66,7 @@ class NexusIQServer extends FlowPlugin {
                 14:40:13 [INFO] Number of grandfathered policy violations: 0 
                 14:40:13 [INFO] Number of components: 2676 
                 14:40:13 [INFO] The detailed report can be viewed online at https://xxxx:8443/ui/links/application/appid/report/97cb3a8c6a4 
-                14:40:13 [INFO]
-"""
+                14:40:13 [INFO]"""
                 violations = extractViolations(stdOut)
                 reportUrl = extractReportUrl(stdOut)
                 componentsIdentifiedCount = extractComponentsIdentifiedCount(stdOut)
@@ -91,66 +90,66 @@ class NexusIQServer extends FlowPlugin {
         if(reportId){
             restParams.put("reportId", reportId)
             //Object response = rest.getReportDetails(restParams)
-            Object response = """
+            Object response = """\
             {
-   "components": [
-      {
-         "hash": "1249e25aebb15358bedd",
-         "componentIdentifier": {
-            "format": "maven",
-            "coordinates": {
-               "artifactId": "tomcat-util",
-               "groupId": "tomcat",
-               "version": "5.5.23",
-               "extension": "jar",
-               "classifier": ""
-            },
-         },
-         "packageUrl": "pkg:maven/tomcat/tomcat-util@5.5.23?type=jar",	
-         "proprietary": false,
-         "matchState": "exact",
-         "pathnames": [
-            "sample-application.zip/tomcat-util-5.5.23.jar"
-         ],
-         "licenseData": {
-            "declaredLicenses": [
-               {
-                  "licenseId": "Apache-2.0",
-                  "licenseName": "Apache-2.0"
-               }
-            ],
-            "observedLicenses": [
-               {
-                  "licenseId": "No-Sources",
-                  "licenseName": "No Sources"
-               }
-            ],
-            "effectiveLicenses": [
-               {
-                  "licenseId": "Apache-2.0",
-                  "licenseName": "Apache-2.0"
-               }
-            ],
-            "overriddenLicenses": [
+                "components": [
+                    {
+                        "hash": "1249e25aebb15358bedd",
+                        "componentIdentifier": {
+                            "format": "maven",
+                            "coordinates": {
+                            "artifactId": "tomcat-util",
+                            "groupId": "tomcat",
+                            "version": "5.5.23",
+                            "extension": "jar",
+                            "classifier": ""
+                            },
+                        },
+                        "packageUrl": "pkg:maven/tomcat/tomcat-util@5.5.23?type=jar",	
+                        "proprietary": false,
+                        "matchState": "exact",
+                        "pathnames": [
+                            "sample-application.zip/tomcat-util-5.5.23.jar"
+                        ],
+                        "licenseData": {
+                            "declaredLicenses": [
+                            {
+                                "licenseId": "Apache-2.0",
+                                "licenseName": "Apache-2.0"
+                            }
+                            ],
+                            "observedLicenses": [
+                            {
+                                "licenseId": "No-Sources",
+                                "licenseName": "No Sources"
+                            }
+                            ],
+                            "effectiveLicenses": [
+                            {
+                                "licenseId": "Apache-2.0",
+                                "licenseName": "Apache-2.0"
+                            }
+                            ],
+                            "overriddenLicenses": [
 
-            ],
-            "status": "Open"
-         },
-         "securityData": {
-            "securityIssues": [
-               {
-                  "source": "cve",
-                  "reference": "CVE-2007-3385",
-                  "severity": 4.3,
-                  "status": "Open",
-                  "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2007-3385",
-                  "threatCategory": "severe"
-               }
-            ]
-         }
-      }
-   ]
-}"""
+                            ],
+                            "status": "Open"
+                        },
+                        "securityData": {
+                            "securityIssues": [
+                            {
+                                "source": "cve",
+                                "reference": "CVE-2007-3385",
+                                "severity": 4.3,
+                                "status": "Open",
+                                "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2007-3385",
+                                "threatCategory": "severe"
+                            }
+                            ]
+                        }
+                    }
+                ]
+            }""".stripIndent()
             log.info "Got response from server: $response"
             response = new JsonSlurper().parseText(response)
 
