@@ -66,7 +66,7 @@ class NexusIQServer extends FlowPlugin {
                 14:40:13 [INFO] Number of grandfathered policy violations: 0 
                 14:40:13 [INFO] Number of components: 2676 
                 14:40:13 [INFO] The detailed report can be viewed online at https://xxxx:8443/ui/links/application/appid/report/97cb3a8c6a4 
-                14:40:13 [INFO]"""
+                14:40:13 [INFO]""".stripIndent()
                 violations = extractViolations(stdOut)
                 reportUrl = extractReportUrl(stdOut)
                 componentsIdentifiedCount = extractComponentsIdentifiedCount(stdOut)
