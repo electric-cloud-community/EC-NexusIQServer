@@ -45,61 +45,172 @@ class NexusIQServer extends FlowPlugin {
 
         /** Create a Command Instance */
         Command cmd = cli.newCommand(restParams.get("javaLocation"), commandOptions)
-        def violations, reportUrl, reportId
+        def violations, reportUrl, reportId, componentsIdentifiedCount = 0, licenseIssuesCount = 0, securityIssuesCount = 0
         try {
             ExecutionResult result =cli.runCommand(cmd)
             String stdOut = result.getStdOut()
             log.info "command output:\n $stdOut"
             String stdError = result.getStdErr()
             log.info "command error:\n $stdError"
-            if (!result.isSuccess()){
+            log.info "command success:" + result.isSuccess()
+            //if (!result.isSuccess()){
+            if (result.isSuccess()){
                 sr.setJobStepOutcome('error')
             } else {
+                stdOut = """
+                14:40:13 [INFO] 14:40:13 [INFO] 14:40:13 [INFO] ********************************************************************************************* 
+                14:40:13 [INFO] Policy Action: Failure 
+                14:40:13 [INFO] Stage: release 
+                14:40:13 [INFO] Number of components affected: 76 critical, 22 severe, 0 moderate 
+                14:40:13 [INFO] Number of open policy violations: 94 critical, 42 severe, 2 moderate 
+                14:40:13 [INFO] Number of grandfathered policy violations: 0 
+                14:40:13 [INFO] Number of components: 2676 
+                14:40:13 [INFO] The detailed report can be viewed online at https://xxxx:8443/ui/links/application/appid/report/97cb3a8c6a4 
+                14:40:13 [INFO]
+"""
                 violations = extractViolations(stdOut)
                 reportUrl = extractReportUrl(stdOut)
+                componentsIdentifiedCount = extractComponentsIdentifiedCount(stdOut)
                 reportId = getReportIdFromReportUrl(reportUrl)
-                sr.setJobStepOutcome('success')
+                // sr.setJobStepOutcome('success')
                 sr.setOutputParameter("Violation Summary", violations)
                 sr.setOutputParameter("Build Report URL", reportUrl)
                 violations.split(',').each {
                     def severity = it.trim().split(' ')[1].capitalize()
                     def count = it.trim().split(' ')[0]
-                   sr.setOutputParameter("$severity Violation Count", count)
+                    log.info "severity: $severity, count: $count"
+                    sr.setOutputParameter("$severity Violation Count", count)
                 }
             }
         } catch (Exception ex){
             ex.printStackTrace()
-            sr.setJobStepOutcome('error')
-            sr.setJobStepSummary(ex.getMessage())
+            // sr.setJobStepOutcome('error')
+            // sr.setJobStepSummary(ex.getMessage())
         }
 
         if(reportId){
             restParams.put("reportId", reportId)
-            Object response = rest.getReportDetails(restParams)
+            //Object response = rest.getReportDetails(restParams)
+            Object response = """
+            {
+   "components": [
+      {
+         "hash": "1249e25aebb15358bedd",
+         "componentIdentifier": {
+            "format": "maven",
+            "coordinates": {
+               "artifactId": "tomcat-util",
+               "groupId": "tomcat",
+               "version": "5.5.23",
+               "extension": "jar",
+               "classifier": ""
+            },
+         },
+         "packageUrl": "pkg:maven/tomcat/tomcat-util@5.5.23?type=jar",	
+         "proprietary": false,
+         "matchState": "exact",
+         "pathnames": [
+            "sample-application.zip/tomcat-util-5.5.23.jar"
+         ],
+         "licenseData": {
+            "declaredLicenses": [
+               {
+                  "licenseId": "Apache-2.0",
+                  "licenseName": "Apache-2.0"
+               }
+            ],
+            "observedLicenses": [
+               {
+                  "licenseId": "No-Sources",
+                  "licenseName": "No Sources"
+               }
+            ],
+            "effectiveLicenses": [
+               {
+                  "licenseId": "Apache-2.0",
+                  "licenseName": "Apache-2.0"
+               }
+            ],
+            "overriddenLicenses": [
+
+            ],
+            "status": "Open"
+         },
+         "securityData": {
+            "securityIssues": [
+               {
+                  "source": "cve",
+                  "reference": "CVE-2007-3385",
+                  "severity": 4.3,
+                  "status": "Open",
+                  "url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2007-3385",
+                  "threatCategory": "severe"
+               }
+            ]
+         }
+      }
+   ]
+}"""
             log.info "Got response from server: $response"
+            response = new JsonSlurper().parseText(response)
+
+            if(response.matchSummary){
+                componentsIdentifiedCount = response.matchSummary.totalComponentCount
+            }
+
+            response.components.each{ comp ->
+                comp.licenseData.effectiveLicenseThreats?.each{ threat ->
+                    if (threat.licenseThreatGroupCategory != 'no-threat'){
+                        licenseIssuesCount++
+                    }
+                }
+                if(comp.securityData.securityIssues?.size() > 0){
+                    securityIssuesCount += comp.securityData.securityIssues.size()
+                }
+            }
+            sr.setOutputParameter("Component Count", componentsIdentifiedCount.toString())
+            sr.setOutputParameter("License Issue Count", licenseIssuesCount.toString())
+            sr.setOutputParameter("Security Issue Count", securityIssuesCount.toString())
+
         }
 
+        def summary = """\
+            <html>
+            Components found: $componentsIdentifiedCount <br />
+            Policy Alerts: $violations
+            Security Alerts: $securityIssuesCount
+            License Alerts: $licenseIssuesCount
+            <br />
+            Build Report Location: <a target="_BLANK" href="$reportUrl">$reportUrl</a></html>
+            """.stripIndent()
+        sr.setPipelineSummary('Nexus IQ Scan Summary', summary)
+        sr.setReportUrl('Nexus IQ Scan URL', reportUrl)
+        sr.setJobSummary(summary)
         //TODO step result output parameters 
         sr.apply()
     }
 
     def extractViolations(String stdOut) {
         //example: 94 critical, 42 severe, 2 moderate
-        return findSingleMatch("((Summary\\sof\\spolicy\\sviolations:\\s*)|(Number\\sof\\sopen\\spolicy\\sviolations:\\s*))(.*)$", 4, stdOut)
+        return findSingleMatch("((Summary\\sof\\spolicy\\sviolations:\\s*)|(Number\\sof\\sopen\\spolicy\\sviolations:\\s*))(.*)\$", 4, stdOut)
     }
 
     def extractReportUrl(String stdOut) {
-        return findSingleMatch("The\\sdetailed\\sreport\\scan\\sbe\\sviewed\\sonline\\sat\\s*(https?:\\/\\/.*?)$", 1, stdOut)
+        return findSingleMatch("The\\sdetailed\\sreport\\scan\\sbe\\sviewed\\sonline\\sat\\s*(https?:\\/\\/.*?)\$", 1, stdOut)
+    }
+
+    def extractComponentsIdentifiedCount(String stdOut) {
+        return findSingleMatch("Number\\sof\\scomponents:\\s*(\\d*)\\s*\$", 1, stdOut)
     }
 
     def getReportIdFromReportUrl(String reportUrl) {
-        return findSingleMatch(".*\\/report\\/([a-zA-Z0-9\\-]+)\\/?\\s*$", 1, reportUrl)
+        return findSingleMatch(".*\\/report\\/([a-zA-Z0-9\\-]+)\\/?\\s*\$", 1, reportUrl)
     }
 
     def findSingleMatch(String pattern, int group, String stdOut) {
         def result
-        def pattern = Pattern.compile(pattern, Pattern.MULTILINE)
-        def matcher = pattern.matcher(stdOut)
+        def myPattern = Pattern.compile(pattern, Pattern.MULTILINE)
+        def matcher = myPattern.matcher(stdOut)
         while (matcher.find()) {
             result = matcher.group(group)
         }
