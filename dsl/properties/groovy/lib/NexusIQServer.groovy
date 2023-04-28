@@ -186,28 +186,27 @@ class NexusIQServer extends FlowPlugin {
         sr.setPipelineSummary('Nexus IQ Scan Summary', summary)
         sr.setReportUrl('Nexus IQ Scan URL', reportUrl)
         sr.setJobSummary(summary)
-        //TODO step result output parameters 
         sr.apply()
     }
 
-    def extractViolations(String stdOut) {
+    private def extractViolations(String stdOut) {
         //example: 94 critical, 42 severe, 2 moderate
         return findSingleMatch("((Summary\\sof\\spolicy\\sviolations:\\s*)|(Number\\sof\\sopen\\spolicy\\sviolations:\\s*))(.*)\$", 4, stdOut)
     }
 
-    def extractReportUrl(String stdOut) {
+    private def extractReportUrl(String stdOut) {
         return findSingleMatch("The\\sdetailed\\sreport\\scan\\sbe\\sviewed\\sonline\\sat\\s*(https?:\\/\\/.*?)\$", 1, stdOut)
     }
 
-    def extractComponentsIdentifiedCount(String stdOut) {
+    private def extractComponentsIdentifiedCount(String stdOut) {
         return findSingleMatch("Number\\sof\\scomponents:\\s*(\\d*)\\s*\$", 1, stdOut)
     }
 
-    def getReportIdFromReportUrl(String reportUrl) {
+    private def getReportIdFromReportUrl(String reportUrl) {
         return findSingleMatch(".*\\/report\\/([a-zA-Z0-9\\-]+)\\/?\\s*\$", 1, reportUrl)
     }
 
-    def findSingleMatch(String pattern, int group, String stdOut) {
+    private def findSingleMatch(String pattern, int group, String stdOut) {
         def result
         def myPattern = Pattern.compile(pattern, Pattern.MULTILINE)
         def matcher = myPattern.matcher(stdOut)
@@ -225,7 +224,7 @@ class NexusIQServer extends FlowPlugin {
         # 5 - credenrials username:password
         # 6 - app path
     **/
-    def genCommandOptions(clientJar, applicationId, serverURL, credential, applicationWarLocation) {
+    private def genCommandOptions(clientJar, applicationId, serverURL, credential, applicationWarLocation) {
         def userName = credential.userName
         def password = credential.secretValue
 
