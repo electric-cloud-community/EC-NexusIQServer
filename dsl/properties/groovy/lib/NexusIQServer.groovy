@@ -53,10 +53,11 @@ class NexusIQServer extends FlowPlugin {
             String stdError = result.getStdErr()
             log.info "command error:\n $stdError"
             log.info "command success:" + result.isSuccess()
-            //if (!result.isSuccess()){
-            if (result.isSuccess()){
+            if (!result.isSuccess()){
+            //if (result.isSuccess()){
                 sr.setJobStepOutcome('error')
             } else {
+                /*
                 stdOut = """\
                 14:40:13 [INFO] 14:40:13 [INFO] 14:40:13 [INFO] ********************************************************************************************* 
                 14:40:13 [INFO] Policy Action: Failure 
@@ -67,6 +68,7 @@ class NexusIQServer extends FlowPlugin {
                 14:40:13 [INFO] Number of components: 2676 
                 14:40:13 [INFO] The detailed report can be viewed online at https://xxxx:8443/ui/links/application/appid/report/97cb3a8c6a4 
                 14:40:13 [INFO]""".stripIndent()
+                */
                 violations = extractViolations(stdOut)
                 reportUrl = extractReportUrl(stdOut)
                 componentsIdentifiedCount = extractComponentsIdentifiedCount(stdOut)
@@ -83,13 +85,14 @@ class NexusIQServer extends FlowPlugin {
             }
         } catch (Exception ex){
             ex.printStackTrace()
-            // sr.setJobStepOutcome('error')
-            // sr.setJobStepSummary(ex.getMessage())
+            sr.setJobStepOutcome('error')
+            sr.setJobStepSummary(ex.getMessage())
         }
 
         if(reportId){
             restParams.put("reportId", reportId)
-            //Object response = rest.getReportDetails(restParams)
+            Object response = rest.getReportDetails(restParams)
+            /*
             Object response = """\
             {
                 "components": [
@@ -150,6 +153,7 @@ class NexusIQServer extends FlowPlugin {
                     }
                 ]
             }""".stripIndent()
+            */
             log.info "Got response from server: $response"
             response = new JsonSlurper().parseText(response)
 
