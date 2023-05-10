@@ -53,11 +53,7 @@ class NexusIQServer extends FlowPlugin {
             String stdError = result.getStdErr()
             log.info "command error:\n $stdError"
             log.info "command success:" + result.isSuccess()
-            if (!result.isSuccess()){
-            //if (result.isSuccess()){
-                sr.setJobStepOutcome('error')
-            }
-            
+
             /*
             stdOut = """\
             14:40:13 [INFO] 14:40:13 [INFO] 14:40:13 [INFO] ********************************************************************************************* 
@@ -74,7 +70,6 @@ class NexusIQServer extends FlowPlugin {
             reportUrl = extractReportUrl(stdOut)
             componentsIdentifiedCount = extractComponentsIdentifiedCount(stdOut)
             reportId = getReportIdFromReportUrl(reportUrl)
-            // sr.setJobStepOutcome('success')
             sr.setOutputParameter("Violation Summary", violations)
             sr.setOutputParameter("Build Report URL", reportUrl)
             violations.split(',').each {
@@ -155,19 +150,19 @@ class NexusIQServer extends FlowPlugin {
             }""".stripIndent()
             */
             log.info "Got response from server: $response"
-            response = new JsonSlurper().parseText(response)
+            //response = new JsonSlurper().parseText(response)
 
             if(response.matchSummary){
                 componentsIdentifiedCount = response.matchSummary.totalComponentCount
             }
 
             response.components.each{ comp ->
-                comp.licenseData.effectiveLicenseThreats?.each{ threat ->
+                comp.licenseData?.effectiveLicenseThreats?.each{ threat ->
                     if (threat.licenseThreatGroupCategory != 'no-threat'){
                         licenseIssuesCount++
                     }
                 }
-                if(comp.securityData.securityIssues?.size() > 0){
+                if(comp.securityData?.securityIssues?.size() > 0){
                     securityIssuesCount += comp.securityData.securityIssues.size()
                 }
             }
@@ -188,6 +183,8 @@ class NexusIQServer extends FlowPlugin {
             sr.setReportUrl('Nexus IQ Scan URL', reportUrl)
             sr.setJobSummary(summary)
 
+        } else {
+            sr.setJobStepOutcome('error')
         }
 
         sr.apply()
