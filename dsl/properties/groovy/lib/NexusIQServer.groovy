@@ -175,9 +175,7 @@ class NexusIQServer extends FlowPlugin {
             sr.setOutputParameter("License Issue Count", licenseIssuesCount.toString())
             sr.setOutputParameter("Security Issue Count", securityIssuesCount.toString())
 
-        }
-
-        def summary = """\
+            def summary = """\
             <html>
             Components found: $componentsIdentifiedCount <br />
             Policy Alerts: $violations
@@ -186,9 +184,12 @@ class NexusIQServer extends FlowPlugin {
             <br />
             Build Report Location: <a target="_BLANK" href="$reportUrl">$reportUrl</a></html>
             """.stripIndent()
-        sr.setPipelineSummary('Nexus IQ Scan Summary', summary)
-        sr.setReportUrl('Nexus IQ Scan URL', reportUrl)
-        sr.setJobSummary(summary)
+            sr.setPipelineSummary('Nexus IQ Scan Summary', summary)
+            sr.setReportUrl('Nexus IQ Scan URL', reportUrl)
+            sr.setJobSummary(summary)
+
+        }
+
         sr.apply()
     }
 
