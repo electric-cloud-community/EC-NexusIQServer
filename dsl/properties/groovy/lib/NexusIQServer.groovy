@@ -56,32 +56,32 @@ class NexusIQServer extends FlowPlugin {
             if (!result.isSuccess()){
             //if (result.isSuccess()){
                 sr.setJobStepOutcome('error')
-            } else {
-                /*
-                stdOut = """\
-                14:40:13 [INFO] 14:40:13 [INFO] 14:40:13 [INFO] ********************************************************************************************* 
-                14:40:13 [INFO] Policy Action: Failure 
-                14:40:13 [INFO] Stage: release 
-                14:40:13 [INFO] Number of components affected: 76 critical, 22 severe, 0 moderate 
-                14:40:13 [INFO] Number of open policy violations: 94 critical, 42 severe, 2 moderate 
-                14:40:13 [INFO] Number of grandfathered policy violations: 0 
-                14:40:13 [INFO] Number of components: 2676 
-                14:40:13 [INFO] The detailed report can be viewed online at https://xxxx:8443/ui/links/application/appid/report/97cb3a8c6a4 
-                14:40:13 [INFO]""".stripIndent()
-                */
-                violations = extractViolations(stdOut)
-                reportUrl = extractReportUrl(stdOut)
-                componentsIdentifiedCount = extractComponentsIdentifiedCount(stdOut)
-                reportId = getReportIdFromReportUrl(reportUrl)
-                // sr.setJobStepOutcome('success')
-                sr.setOutputParameter("Violation Summary", violations)
-                sr.setOutputParameter("Build Report URL", reportUrl)
-                violations.split(',').each {
-                    def severity = it.trim().split(' ')[1].capitalize()
-                    def count = it.trim().split(' ')[0]
-                    log.info "severity: $severity, count: $count"
-                    sr.setOutputParameter("$severity Violation Count", count)
-                }
+            }
+            
+            /*
+            stdOut = """\
+            14:40:13 [INFO] 14:40:13 [INFO] 14:40:13 [INFO] ********************************************************************************************* 
+            14:40:13 [INFO] Policy Action: Failure 
+            14:40:13 [INFO] Stage: release 
+            14:40:13 [INFO] Number of components affected: 76 critical, 22 severe, 0 moderate 
+            14:40:13 [INFO] Number of open policy violations: 94 critical, 42 severe, 2 moderate 
+            14:40:13 [INFO] Number of grandfathered policy violations: 0 
+            14:40:13 [INFO] Number of components: 2676 
+            14:40:13 [INFO] The detailed report can be viewed online at https://xxxx:8443/ui/links/application/appid/report/97cb3a8c6a4 
+            14:40:13 [INFO]""".stripIndent()
+            */
+            violations = extractViolations(stdOut)
+            reportUrl = extractReportUrl(stdOut)
+            componentsIdentifiedCount = extractComponentsIdentifiedCount(stdOut)
+            reportId = getReportIdFromReportUrl(reportUrl)
+            // sr.setJobStepOutcome('success')
+            sr.setOutputParameter("Violation Summary", violations)
+            sr.setOutputParameter("Build Report URL", reportUrl)
+            violations.split(',').each {
+                def severity = it.trim().split(' ')[1].capitalize()
+                def count = it.trim().split(' ')[0]
+                log.info "severity: $severity, count: $count"
+                sr.setOutputParameter("$severity Violation Count", count)
             }
         } catch (Exception ex){
             ex.printStackTrace()
