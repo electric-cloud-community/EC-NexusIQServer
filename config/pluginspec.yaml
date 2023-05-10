@@ -19,7 +19,7 @@ configuration:
   restConfigInfo:
     endpointLabel: 'Nexus IQ Server URL'
     endpointDescription: Specify the URL to the IQ Nexus server. e.g. http://nexus-iq-server:8070
-    checkConnectionUri: '/api/v2/users'
+    checkConnectionUri: '/api/v2/organizations'
     defaultEndpointValue: http://nexus-iq-server:8070
     headers:
       Accept: 'application/json'

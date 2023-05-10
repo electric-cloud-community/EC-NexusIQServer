@@ -9,7 +9,7 @@ import static groovyx.net.http.ContentType.JSON
 import org.apache.http.auth.*
 
 def checkConnectionMetaString = '''
-{"authSchemes":{"basic":{"checkConnectionUri":null,"credentialName":"basic_credential"}},"checkConnectionUri":"/api/v2/users","headers":{"Accept":"application/json"}}
+{"authSchemes":{"basic":{"checkConnectionUri":null,"credentialName":"basic_credential"}},"checkConnectionUri":"/api/v2/organizations","headers":{"Accept":"application/json"}}
 '''
 
 def checkConnectionMeta = new JsonSlurper().parseText(checkConnectionMetaString)
@@ -212,4 +212,4 @@ def augmentUri(path, uri) {
     p = p.replaceAll(/\/+/, '/')
     return p
 }
-// DO NOT EDIT THIS BLOCK ABOVE ^^^=== check_connection ends, checksum: 7ee030d6439665e89ac1e70f86e2d3b0 ===
+// DO NOT EDIT THIS BLOCK ABOVE ^^^=== check_connection ends, checksum: db5f9299d4002a86d215bf148bd619e4 ===
