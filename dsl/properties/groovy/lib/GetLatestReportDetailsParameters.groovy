@@ -9,6 +9,10 @@ class GetLatestReportDetailsParameters {
     * Label: Application ID, type: entry
     */
     String nexusApplicationId
+    /**
+    * Label: Result Property Sheet, type: entry
+    */
+    String resultPropertySheet
 
     static GetLatestReportDetailsParameters initParameters(StepParameters sp) {
         GetLatestReportDetailsParameters parameters = new GetLatestReportDetailsParameters()
@@ -16,7 +20,10 @@ class GetLatestReportDetailsParameters {
         def nexusApplicationId = sp.getRequiredParameter('nexusApplicationId').value
         parameters.nexusApplicationId = nexusApplicationId
 
+        def resultPropertySheet = sp.getParameter('resultPropertySheet').value
+        parameters.resultPropertySheet = resultPropertySheet  ?: '/myJob/reportDetails'
+
         return parameters
     }
 }
-// DO NOT EDIT THIS BLOCK ABOVE ^^^=== Parameters ends, checksum: cc8fc84dd04ea3bb1c7766a32ca45d30 ===
+// DO NOT EDIT THIS BLOCK ABOVE ^^^=== Parameters ends, checksum: 9c55916712e6e6bcaa9a7800603663b9 ===

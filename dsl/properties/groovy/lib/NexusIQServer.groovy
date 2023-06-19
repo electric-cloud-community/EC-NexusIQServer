@@ -280,6 +280,22 @@ class NexusIQServer extends FlowPlugin {
             sr.setReportUrl('Nexus IQ Scan URL', reportUrl)
             sr.setOutputParameter("Scan Id", lastReport.scanId.toString())
             sr.setOutputParameter("Stage", lastReport.stage.toString())
+
+            def resultPropertySheet = requestParams.get("resultPropertySheet")
+            if(resultPropertySheet){
+                sr.setOutcomeProperty(resultPropertySheet + "/Component Count", componentsIdentifiedCount.toString())
+                sr.setOutcomeProperty(resultPropertySheet + "/Critical Component Count", lastReport.policyEvaluationResult.criticalComponentCount.toString())
+                sr.setOutcomeProperty(resultPropertySheet + "/Severe Component Count", lastReport.policyEvaluationResult.severeComponentCount.toString())
+                sr.setOutcomeProperty(resultPropertySheet + "/Moderate Component Count", lastReport.policyEvaluationResult.moderateComponentCount.toString())
+                sr.setOutcomeProperty(resultPropertySheet + "/Critical Policy Violation Count", lastReport.policyEvaluationResult.criticalPolicyViolationCount.toString())
+                sr.setOutcomeProperty(resultPropertySheet + "/Severe Policy Violation Count", lastReport.policyEvaluationResult.severePolicyViolationCount.toString())
+                sr.setOutcomeProperty(resultPropertySheet + "/Moderate Policy Violation Count", lastReport.policyEvaluationResult.moderatePolicyViolationCount.toString())
+                sr.setOutcomeProperty(resultPropertySheet + "/Grandfathered Policy Violation Count", lastReport.policyEvaluationResult.grandfatheredPolicyViolationCount.toString())
+                sr.setOutcomeProperty(resultPropertySheet + "/Nexus IQ Scan URL", reportUrl)
+                sr.setOutcomeProperty(resultPropertySheet + "/Evaluation Date", lastReport.evaluationDate.toString())
+                sr.setOutcomeProperty(resultPropertySheet + "/Scan Id", lastReport.scanId.toString())
+                sr.setOutcomeProperty(resultPropertySheet + "/Stage", lastReport.stage.toString())
+            }
         } else {
             sr.setPipelineSummary('Nexus IQ Scan Summary', 'No report found')
             sr.setReportUrl('Nexus IQ Scan URL', 'No report found')

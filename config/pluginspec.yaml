@@ -135,6 +135,13 @@ procedures:
     required: true
     type: entry
     label: Application ID
+  -
+    name: resultPropertySheet
+    documentation: The result propert sheet to store the report details. 
+    required: false
+    value: /myJob/reportDetails
+    type: entry
+    label: Result Property Sheet
   outputParameters:
   -
     name: Component Count
