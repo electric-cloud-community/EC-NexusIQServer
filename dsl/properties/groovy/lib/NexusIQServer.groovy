@@ -276,7 +276,7 @@ class NexusIQServer extends FlowPlugin {
             sr.setOutputParameter("Moderate Policy Violation Count", lastReport.policyEvaluationResult.moderatePolicyViolationCount.toString())
             sr.setOutputParameter("Grandfathered Policy Violation Count", lastReport.policyEvaluationResult.grandfatheredPolicyViolationCount.toString())
             sr.setOutputParameter("Evaluation Date", lastReport.evaluationDate.toString())
-            def reportUrl = "${baseUrl}${lastReport.reportHtmlUrl}"
+            def reportUrl = "${baseUrl}/${lastReport.reportHtmlUrl}"
             sr.setReportUrl('Nexus IQ Scan URL', reportUrl)
             sr.setOutputParameter("Scan Id", lastReport.scanId.toString())
             sr.setOutputParameter("Stage", lastReport.stage.toString())
