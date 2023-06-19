@@ -3,7 +3,7 @@ pluginInfo:
   # Feel free to change it
   # Call pdk showdoc pluginspec to see the list of available fields and their description
   pluginName: 'EC-NexusIQServer'
-  version: '2.0.0'
+  version: '2.1.0'
   description: 'Integrates witn SonaType Nexus IQ Server reimplemented with PDK.'
   author: 'Shaohua Wen swen@cloudbees.com'
   supportUrl: 'none'
