@@ -198,7 +198,35 @@ class ECNexusIQServerRESTClient {
         Map headers = [:]
         return makeRequest('GET', uri, query, payload, headers)
     }
-// DO NOT EDIT THIS BLOCK ABOVE ^^^=== rest client ends, checksum: 3d95102f7806aef4b2fc64f94fc076b2 ===
+
+    /** Generated code for the endpoint /api/v2/reports/applications/{{applicationId}}/history
+    * Do not change this code
+    * applicationId: in path
+    */
+    def getApplicationScanHistory(Map<String, Object> params) {
+        this.procedureName = 'getApplicationScanHistory'
+        this.procedureParameters = params
+
+        String uri = '/api/v2/reports/applications/{{applicationId}}/history'
+        log.debug("URI template $uri")
+        uri = renderOneLineTemplate(uri, params)
+
+        Map query = [:]
+
+        log.debug "Query: ${query}"
+
+        Object payload
+
+        String jsonTemplate = ''''''
+        if (jsonTemplate) {
+            payload = payloadFromTemplate(jsonTemplate, params)
+            log.debug("Payload from template: $payload")
+        }
+        //TODO clean empty fields
+        Map headers = [:]
+        return makeRequest('GET', uri, query, payload, headers)
+    }
+// DO NOT EDIT THIS BLOCK ABOVE ^^^=== rest client ends, checksum: 63249e43573227c7de487272f78df88e ===
     /**
      * Use this method for any request pre-processing: adding custom headers, binary files, etc.
      */

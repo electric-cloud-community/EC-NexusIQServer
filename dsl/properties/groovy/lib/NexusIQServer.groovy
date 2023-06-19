@@ -242,6 +242,55 @@ class NexusIQServer extends FlowPlugin {
         ECNexusIQServerRESTClient rest = ECNexusIQServerRESTClient.fromConfig(context.getConfigValues(), this)
         return rest
     }
+
+/**
+    * getLatestReportDetails - Get Latest Report Details/Get Latest Report Details
+    * Add your code into this method and it will be called when the step runs
+    * @param config (required: true)
+    * @param nexusApplicationId (required: true)
+
+    */
+    def getLatestReportDetails(StepParameters p, StepResult sr) {
+        // Use this parameters wrapper for convenient access to your parameters
+        GetLatestReportDetailsParameters sp = GetLatestReportDetailsParameters.initParameters(p)
+
+        ECNexusIQServerRESTClient rest = genECNexusIQServerRESTClient()
+        Map restParams = [:]
+        Map requestParams = p.asMap
+        def baseUrl = requestParams.get("endpoint")
+        log.info "requestParams: $requestParams"
+        restParams.put("applicationId", requestParams.get("nexusApplicationId"))
+
+        Object response = rest.getApplicationScanHistory(restParams)
+        log.info "Got rest.getApplicationScanHistory response from server: ${JsonOutput.toJson(response)}"
+        def lastReport = response.reports[0]
+        log.debug "lastReport: ${JsonOutput.toJson(lastReport)}"
+        if(lastReport){
+            def componentsIdentifiedCount = lastReport.policyEvaluationResult.totalComponentCount
+            sr.setOutputParameter("Component Count", componentsIdentifiedCount.toString())
+            sr.setOutputParameter("Critical Component Count", lastReport.policyEvaluationResult.criticalComponentCount.toString())
+            sr.setOutputParameter("Severe Component Count", lastReport.policyEvaluationResult.severeComponentCount.toString())
+            sr.setOutputParameter("Moderate Component Count", lastReport.policyEvaluationResult.moderateComponentCount.toString())
+            sr.setOutputParameter("Critical Policy Violation Count", lastReport.policyEvaluationResult.criticalPolicyViolationCount.toString())
+            sr.setOutputParameter("Severe Policy Violation Count", lastReport.policyEvaluationResult.severePolicyViolationCount.toString())
+            sr.setOutputParameter("Moderate Policy Violation Count", lastReport.policyEvaluationResult.moderatePolicyViolationCount.toString())
+            sr.setOutputParameter("Grandfathered Policy Violation Count", lastReport.policyEvaluationResult.grandfatheredPolicyViolationCount.toString())
+            sr.setOutputParameter("Evaluation Date", lastReport.evaluationDate.toString())
+            def reportUrl = "${baseUrl}${lastReport.reportHtmlUrl}"
+            sr.setReportUrl('Nexus IQ Scan URL', reportUrl)
+            sr.setOutputParameter("Scan Id", lastReport.scanId.toString())
+            sr.setOutputParameter("Stage", lastReport.stage.toString())
+        } else {
+            sr.setPipelineSummary('Nexus IQ Scan Summary', 'No report found')
+            sr.setReportUrl('Nexus IQ Scan URL', 'No report found')
+            sr.setJobSummary('No report found')
+            sr.setJobStepOutcome('error')
+        }
+
+        sr.apply()
+        log.info("step Get Latest Report Details has been finished")
+    }
+
 // === step ends ===
 
 }

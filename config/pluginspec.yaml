@@ -55,6 +55,12 @@ restClient:
         - name: reportId
           in: path
       url: /api/v2/applications/{{applicationId}}/reports/{{reportId}}
+    - methodName: getApplicationScanHistory
+      httpMethod: GET
+      parameters:
+        - name: applicationId
+          in: path
+      url: /api/v2/reports/applications/{{applicationId}}/history
 
 procedures:
 -
@@ -116,3 +122,51 @@ procedures:
     name: License Issue Count
     # Output parameter description
     description: Number of License Issues Identified, for example 6
+
+-
+  name: 'Get Latest Report Details'
+  description: 'This procedure retrieve the latest report details.'
+  # configuration field will be generated automatically
+  hasConfig: true
+  parameters:
+  -
+    name: nexusApplicationId
+    documentation: The name of the Application for which Build Report needs to be created. For example sandbox-application.
+    required: true
+    type: entry
+    label: Application ID
+  outputParameters:
+  -
+    name: Component Count
+    description: Number of Components Identified, for example 28
+  -
+    name: Critical Component Count
+    description: Number of Critical Component Count Identified, for example 27
+  -
+    name: Severe Component Count
+    description: Number of Severe Component Count Identified, for example 27
+  -
+    name: Moderate Component Count
+    description: Number of Moderate Component Count Identified, for example 27
+  -
+    name: Critical Policy Violation Count
+    description: Number of Critical Policy Violation Count Identified, for example 27
+  -
+    name: Severe Policy Violation Count
+    description: Number of Severe Policy Violation Count Identified, for example 27
+  -
+    name: Moderate Policy Violation Count
+    description: Number of Moderate Policy Violation Count Identified, for example 27
+  -
+    name: Grandfathered Policy Violation Count
+    description: Number of Grandfathered Policy Violation Count Identified, for example 27
+  -
+    name: Evaluation Date
+    description: Evaluation Date of the last scan
+  -
+    name: Scan Id
+    description: Scan Id of the last scan
+  -
+    name: Stage
+    description: Stage of the last scan
+
