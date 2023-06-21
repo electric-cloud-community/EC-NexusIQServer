@@ -55,6 +55,12 @@ restClient:
         - name: reportId
           in: path
       url: /api/v2/applications/{{applicationId}}/reports/{{reportId}}
+    - methodName: getApplicationInfo
+      httpMethod: GET
+      parameters:
+        - name: applicationId
+          in: path
+      url: /api/v2/applications?publicId={{applicationId}}
     - methodName: getApplicationScanHistory
       httpMethod: GET
       parameters:
