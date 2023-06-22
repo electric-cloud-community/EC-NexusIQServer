@@ -199,19 +199,21 @@ class ECNexusIQServerRESTClient {
         return makeRequest('GET', uri, query, payload, headers)
     }
 
-    /** Generated code for the endpoint /api/v2/applications?publicId={{applicationId}}
+    /** Generated code for the endpoint /api/v2/applications
     * Do not change this code
-    * applicationId: in path
+    * applicationId: in query
     */
     def getApplicationInfo(Map<String, Object> params) {
         this.procedureName = 'getApplicationInfo'
         this.procedureParameters = params
 
-        String uri = '/api/v2/applications?publicId={{applicationId}}'
+        String uri = '/api/v2/applications'
         log.debug("URI template $uri")
         uri = renderOneLineTemplate(uri, params)
 
         Map query = [:]
+
+        query.put('applicationId', params.get('applicationId'))
 
         log.debug "Query: ${query}"
 
@@ -254,7 +256,7 @@ class ECNexusIQServerRESTClient {
         Map headers = [:]
         return makeRequest('GET', uri, query, payload, headers)
     }
-// DO NOT EDIT THIS BLOCK ABOVE ^^^=== rest client ends, checksum: 55f90db5827b72c0ff2003737671379f ===
+// DO NOT EDIT THIS BLOCK ABOVE ^^^=== rest client ends, checksum: faf6ef4c305d52155150bee3e3080655 ===
     /**
      * Use this method for any request pre-processing: adding custom headers, binary files, etc.
      */

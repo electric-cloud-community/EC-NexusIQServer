@@ -59,8 +59,8 @@ restClient:
       httpMethod: GET
       parameters:
         - name: applicationId
-          in: path
-      url: /api/v2/applications?publicId={{applicationId}}
+          in: query
+      url: /api/v2/applications
     - methodName: getApplicationScanHistory
       httpMethod: GET
       parameters:
