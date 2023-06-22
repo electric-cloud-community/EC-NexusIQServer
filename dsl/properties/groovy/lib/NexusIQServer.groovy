@@ -259,13 +259,14 @@ class NexusIQServer extends FlowPlugin {
         Map requestParams = p.asMap
         def baseUrl = requestParams.get("endpoint")
         log.info "requestParams: $requestParams"
-        restParams.put("applicationId", requestParams.get("nexusApplicationId"))
+        restParams.put("publicId", requestParams.get("nexusApplicationId"))
 
         Object response = rest.getApplicationInfo(restParams)
         log.info "Got rest.getApplicationInfo response from server: ${JsonOutput.toJson(response)}"
-        restParams.put("applicationId", response.applications[0].id)
+        Map restParams1 = [:]
+        restParams1.put("applicationId", response.applications[0].id)
 
-        response = rest.getApplicationScanHistory(restParams)
+        response = rest.getApplicationScanHistory(restParams1)
         log.info "Got rest.getApplicationScanHistory response from server: ${JsonOutput.toJson(response)}"
         def lastReport = response.reports[0]
         log.debug "lastReport: ${JsonOutput.toJson(lastReport)}"

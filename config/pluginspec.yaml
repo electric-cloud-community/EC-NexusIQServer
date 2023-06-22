@@ -58,7 +58,7 @@ restClient:
     - methodName: getApplicationInfo
       httpMethod: GET
       parameters:
-        - name: applicationId
+        - name: publicId
           in: query
       url: /api/v2/applications
     - methodName: getApplicationScanHistory
