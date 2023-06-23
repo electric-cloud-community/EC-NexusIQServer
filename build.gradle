@@ -9,8 +9,7 @@ repositories{
 
 ext {
     lombokVersion = "1.18.24"
-    jacksonVersion = "2.14.0-rc1"
-    springVersion = "5.3.23"
+    jacksonVersion = "2.15.2"
 }
 
 dependencies {
@@ -25,8 +24,6 @@ dependencies {
     implementation 'commons-io:commons-io:2.11.0'
     implementation 'com.squareup.okhttp3:okhttp:4.10.0'
     implementation 'com.squareup.okhttp3:logging-interceptor:4.10.0'
-
-    implementation "org.springframework:spring-web:$springVersion"
 
 }
 
