@@ -281,9 +281,11 @@ class NexusIQServer extends FlowPlugin {
             sr.setOutputParameter("Moderate Policy Violation Count", lastReport.policyEvaluationResult.moderatePolicyViolationCount.toString())
             sr.setOutputParameter("Grandfathered Policy Violation Count", lastReport.policyEvaluationResult.grandfatheredPolicyViolationCount.toString())
             sr.setOutputParameter("Evaluation Date", lastReport.evaluationDate.toString())
-            sr.setOutputParameter("Report Pdf Url", lastReport.reportPdfUrl.toString())
+
             def reportUrl = "${baseUrl}/${lastReport.reportHtmlUrl}"
+            def reportPdfUrl = "${baseUrl}/${lastReport.reportPdfUrl}"
             sr.setReportUrl('Nexus IQ Scan URL', reportUrl)
+            sr.setOutputParameter("Report Pdf Url", lastReport.reportPdfUrl.toString())
             sr.setOutputParameter("Scan Id", lastReport.scanId.toString())
             sr.setOutputParameter("Stage", lastReport.stage.toString())
 
@@ -301,7 +303,7 @@ class NexusIQServer extends FlowPlugin {
                 sr.setOutcomeProperty(resultPropertySheet + "/Evaluation Date", lastReport.evaluationDate.toString())
                 sr.setOutcomeProperty(resultPropertySheet + "/Scan Id", lastReport.scanId.toString())
                 sr.setOutcomeProperty(resultPropertySheet + "/Stage", lastReport.stage.toString())
-                sr.setOutcomeProperty(resultPropertySheet + "/Report Pdf Url", lastReport.reportPdfUrl.toString())
+                sr.setOutcomeProperty(resultPropertySheet + "/Report Pdf Url", reportPdfUrl)
             }
         } else {
             sr.setPipelineSummary('Nexus IQ Scan Summary', 'No report found')
