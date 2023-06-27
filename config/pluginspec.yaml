@@ -182,4 +182,6 @@ procedures:
   -
     name: Stage
     description: Stage of the last scan
-
+  -
+    name: Report Pdf Url
+    description: Report Pdf Url
