@@ -285,7 +285,8 @@ class NexusIQServer extends FlowPlugin {
             def reportUrl = "${baseUrl}/${lastReport.reportHtmlUrl}"
             def reportPdfUrl = "${baseUrl}/${lastReport.reportPdfUrl}"
             sr.setReportUrl('Nexus IQ Scan URL', reportUrl)
-            sr.setOutputParameter("Report Pdf Url", lastReport.reportPdfUrl.toString())
+            sr.setOutputParameter("Report Pdf Url", "<html><a href=\"$reportPdfUrl\">Download Report Pdf</a>")
+            sr.setOutputParameter("Report Url", "<html><a href=\"$reportPdfUrl\">View Report</a>")
             sr.setOutputParameter("Scan Id", lastReport.scanId.toString())
             sr.setOutputParameter("Stage", lastReport.stage.toString())
 
@@ -304,6 +305,7 @@ class NexusIQServer extends FlowPlugin {
                 sr.setOutcomeProperty(resultPropertySheet + "/Scan Id", lastReport.scanId.toString())
                 sr.setOutcomeProperty(resultPropertySheet + "/Stage", lastReport.stage.toString())
                 sr.setOutcomeProperty(resultPropertySheet + "/Report Pdf Url", reportPdfUrl)
+                sr.setOutcomeProperty(resultPropertySheet + "/Report Url", reportUrl)
             }
         } else {
             sr.setPipelineSummary('Nexus IQ Scan Summary', 'No report found')
