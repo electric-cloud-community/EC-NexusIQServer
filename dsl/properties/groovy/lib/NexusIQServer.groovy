@@ -285,8 +285,8 @@ class NexusIQServer extends FlowPlugin {
             def reportUrl = "${baseUrl}/${lastReport.reportHtmlUrl}"
             def reportPdfUrl = "${baseUrl}/${lastReport.reportPdfUrl}"
             sr.setReportUrl('Nexus IQ Scan URL', reportUrl)
-            sr.setOutputParameter("Report Pdf Url", "<html><a href=\"$reportPdfUrl\">Download Report Pdf</a>")
-            sr.setOutputParameter("Report Url", "<html><a href=\"$reportPdfUrl\">View Report</a>")
+            sr.setOutputParameter("Report Pdf Url", "<html><a href=\"$reportPdfUrl\">Download Report Pdf</a></html>")
+            sr.setOutputParameter("Report Url", "<html><a href=\"$reportUrl\">View Report</a></html>")
             sr.setOutputParameter("Scan Id", lastReport.scanId.toString())
             sr.setOutputParameter("Stage", lastReport.stage.toString())
 
