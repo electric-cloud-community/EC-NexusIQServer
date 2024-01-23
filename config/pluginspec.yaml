@@ -4,7 +4,7 @@ pluginInfo:
   # Call pdk showdoc pluginspec to see the list of available fields and their description
   pluginName: 'EC-NexusIQServer'
   version: '2.1.4'
-  description: 'Integrates witn SonaType Nexus IQ Server reimplemented with PDK.'
+  description: 'Integrates with SonaType Nexus IQ Server reimplemented with PDK.'
   author: 'Shaohua Wen swen@cloudbees.com'
   supportUrl: 'none'
   category: 'Security'
